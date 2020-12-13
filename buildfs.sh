@@ -1,1 +1,0 @@
-dd if=/dev/zero of=lfslog bs=1KB count=100000
