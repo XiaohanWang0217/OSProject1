@@ -129,12 +129,12 @@ public class PriorityScheduler extends Scheduler {
      */
     protected class PriorityQueue extends ThreadQueue {
 
-	public ArrayList<KThread> arr;
+	public ArrayList<ThreadState> arr;
 	public ThreadState state;
 
 	PriorityQueue(boolean transferPriority) {
 		this.transferPriority = transferPriority;
-		arr = new ArrayList<KThread>();
+		arr = new ArrayList<ThreadState>();
 		state = null;
 		//System.out.println("initializing a priorityqueue");
 	}
@@ -149,20 +149,59 @@ public class PriorityScheduler extends Scheduler {
 	    getThreadState(thread).acquire(this);
 	}
 
+	private int current_state;
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
 		// implement me
 		
 		//my code begin
 
-		if (state != null) {
-			state.HoldingQueues.remove(this);
+		current_state = -1;
+		ThreadState t=null, threadstate=null;
+		int mx=-1;
+
+		System.out.println("a new request for nextthread");
+		while ((t=pickNextThread()) != null) {
+			int w = t.getEffectivePriority();
+			System.out.println("a element with priority "+String.valueOf(w));
+			if (w >= mx || transferPriority) {
+				mx = w;
+				threadstate = t;
+			}
 		}
-		ThreadState t = pickNextThread();
-		if (t == null)
+
+		/*if (idx != -1) {
+			if (arr.get(idx).thread.getName() == "thread1")
+				System.out.println("next thread is thread 1");
+			if (arr.get(idx).thread.getName() == "thread2")
+				System.out.println("next thread is thread 2");
+			if (arr.get(idx).thread.getName() == "thread3")
+				System.out.println("next thread is thread 3");
+			if (mx == 0)
+				System.out.println("value:0");
+				
+			if (mx == 1)
+				System.out.println("value:1");
+				
+			if (mx == 2)
+				System.out.println("value:2");
+				
+			if (mx == 3)
+				System.out.println("value:3");
+				
+			if (mx == 4)
+				System.out.println("value:4");
+				
+			if (mx == 5)
+				System.out.println("value:5");
+		}*/
+
+		if (mx == -1)
 			return null;
-		t.acquire(this);
-		return t.thread;
+		else {
+			//System.out.println("PriorityScheduler --- next thread -- "+threadstate.thread.getName());
+			return arr.remove(arr.indexOf(threadstate)).thread;
+		}
 
 		//my code end
 	    //return null;
@@ -178,21 +217,11 @@ public class PriorityScheduler extends Scheduler {
 	protected ThreadState pickNextThread() {
 		// implement me
 		// my code begin
-		int mx=-1, w;
-		ThreadState t=null, threadstate=null;
-		//System.out.println("begining searching next thread");
-
-		for (int i = 0; i < arr.size(); i++) {
-			t = getThreadState(arr.get(i));
-			w = t.getEffectivePriority();
-			//System.out.println("find "+t.thread.getName()+" with priority "+String.valueOf(w));
-			if (w > mx) {
-				mx = w;
-				threadstate = t;
-			}
+		if (++current_state < arr.size()) {
+			return arr.get(current_state);
 		}
 		// my code end
-	    return threadstate;
+	    return null;
 	}
 	
 	public void print() {
@@ -223,7 +252,7 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public ThreadState(KThread thread) {
 	    this.thread = thread;
-	    
+	    //System.out.println("building a new threadstate:"+thread.getName());
 		setPriority(priorityDefault);
 	}
 
@@ -233,7 +262,7 @@ public class PriorityScheduler extends Scheduler {
 	 * @return	the priority of the associated thread.
 	 */
 	public int getPriority() {
-
+		//System.out.println("call getPriority of "+thread.getName()+" with value="+String.valueOf(priority));
 
 	    return priority;
 	}
@@ -246,30 +275,54 @@ public class PriorityScheduler extends Scheduler {
 	public int getEffectivePriority() {
 		// implement me
 		// my code begin
+		/*System.out.println("get a priority");
+		if (thread.getName() == "thread1")
+			System.out.println("name:thread1");
+		else if (thread.getName() == "thread2")
+			System.out.println("name:thread2");
+		else if (thread.getName() == "thread3")
+			System.out.println("name:thread3");
+		else
+			System.out.println("name:others");
+
+		if (waitQueue.arr.size() == 0)
+			System.out.println("arr size=0");
+		else if (waitQueue.arr.size() == 1)
+			System.out.println("arr size=1");
+		else if (waitQueue.arr.size() == 2)
+			System.out.println("arr size=2");
+		else if (waitQueue.arr.size() == 3)
+			System.out.println("arr size=3");
+		else if (waitQueue.arr.size() == 4)
+			System.out.println("arr size=4");
+		else if (waitQueue.arr.size() == 5)
+			System.out.println("arr size=5");
+		else
+			System.out.println("arr size>5");*/
+
 		
+		/*
+		if (priority == -1)
+			System.out.println("priority:empty");
+		else if (priority == 0)
+			System.out.println("priority:0");
+		else if (priority == 1)
+			System.out.println("priority:1");
+		else if (priority == 2)
+			System.out.println("priority:2");
+		else if (priority == 3)
+			System.out.println("priority:3");
+		else if (priority == 4)
+			System.out.println("priority:4");
+		else if (priority == 5)
+			System.out.println("priority:5");
+		else
+			System.out.println("priority:>5");
+			
+		System.out.println("get a priority end");*/
+
 		//System.out.printf("name:%s, priority:%d",thread.getName(),mx);
 		// my code end
-		int mx = this.priority;
-
-		//System.out.println("call geteffectprioirty of "+this.thread.getName());
-		//System.out.println("now the size of waitQueue is "+waitQueue.size());
-
-		
-		for (int i = 0; i < HoldingQueues.size(); i++) {
-			PriorityQueue q = HoldingQueues.get(i);
-			for (int j = 0; j < q.arr.size(); j++) {
-				int w = getThreadState(q.arr.get(j)).getEffectivePriority();
-				if (w > mx)
-					mx = w;
-			}
-		}
-		if (mx > this.priority) {
-			//System.out.println("setting priority of "+thread.getName()+" to "+String.valueOf(mx));
-			setPriority(mx);
-		}
-		
-		//System.out.println("return "+String.valueOf(priority));
-
 	    return priority;
 	}
 
@@ -299,13 +352,13 @@ public class PriorityScheduler extends Scheduler {
 	 *
 	 * @see	nachos.threads.ThreadQueue#waitForAccess
 	 */
-	
-	
+	protected ArrayList<PriorityQueue> HoldingQueues = new ArrayList<PriorityQueue>();
+	protected ArrayList<ThreadState> waitQueue = new ArrayList<ThreadState>();
 
-	/*public void updatepriority() {
+	public void updatepriority() {
 		if (HoldingQueues == null)
 			return;
-		int mx = -1, w;
+		int mx = this.getEffectivePriority(), w;
 		ThreadState t = null;
 		for (int i = 0; i < HoldingQueues.size(); i++) {
 			t = HoldingQueues.get(i).state;
@@ -317,10 +370,10 @@ public class PriorityScheduler extends Scheduler {
 				}
 			}
 		}
+		System.out.println("update priority for "+thread.getName()+" from "+String.valueOf(this.getEffectivePriority())+" to "+String.valueOf(mx));
 		if (mx > this.getEffectivePriority())
 			this.setPriority(mx);
-		System.out.println("update priority of "+this.thread.getName()+" to "+String.valueOf(this.getEffectivePriority()));
-	}*/
+	}
 	public void waitForAccess(PriorityQueue waitQueue) {
 		// implement me
 		// my code begin
@@ -334,18 +387,21 @@ public class PriorityScheduler extends Scheduler {
 			System.out.println("name:thread3");
 		else 
 			System.out.println("name:others");*/
-		//System.out.println("waitforaccess "+this.thread.getName());
-		//System.out.println("Current thread "+KThread.currentThread().getName());
-		waitQueue.arr.add(this.thread);
+		waitQueue.arr.add(this);
+		//System.out.println("wait for access :"+this.thread.getName());
 		
-		/*if (waitQueue.transferPriority == true) {
-			System.out.println("(((((((((Should transfer priority");
+		if (waitQueue.transferPriority == true) {
 			HoldingQueues.add(waitQueue);
+			//System.out.println("HoldingQueues add waitQueue");
+			//if (waitQueue.state == null)
+			//	System.out.println("waitQueue.state is null");
+			//if (waitQueue.state == this)
+			//	System.out.println("waitQueue.stats is this");
 			if (waitQueue.state != null && waitQueue.state != this) {
 				waitQueue.state.waitQueue.add(this);
 				updatepriority();
 			}
-		}*/
+		}
 		/*
 		if (waitQueue.arr.size() == 0)
 			System.out.println("now arr size=0");
@@ -379,40 +435,37 @@ public class PriorityScheduler extends Scheduler {
 	public void acquire(PriorityQueue waitQueue) {
 		// implement me
 		// my code begin
-		//Lib.assertTrue(waitQueue.arr.isEmpty());
-		waitQueue.arr.remove(this.thread);
+		Lib.assertTrue(waitQueue.arr.isEmpty());
 		waitQueue.state = this;
-		this.HoldingQueues.add(waitQueue);
 		// my code end
 	}	
 
 	/** The thread with which this object is associated. */	   
 	protected KThread thread;
 	/** The priority of the associated thread. */
-	protected int priority;
-	protected ArrayList<PriorityQueue> HoldingQueues = new ArrayList<PriorityQueue>();
+	protected int priority=-1;
 	}
 	
 	public static void self_test() {
 		System.out.println("\n\n---------------------------\n\n");
 		System.out.println("happy to test PriorityScheduler");
-		KThread thread1 = new KThread(
-			new Runnable() {
-				public void run() {
-					System.out.println("-----------------------------------------running thread1!!");
-				}
+		KThread thread1 = new KThread(new Runnable() {
+			public void run() {
+				//thread1.join();
+				System.out.println("--------------------------------------------------------------------------------------running thread1!!");
 			}
-		);
+		});
 		KThread thread2 = new KThread(new Runnable() {
 			public void run() {
 				//thread1.join();
-				System.out.println("-----------------------------------------running thread2!!");
+				System.out.println("--------------------------------------------------------------------------------------running thread2!!");
 			}
 		});
 		KThread thread3 = new KThread(new Runnable() {
 			public void run() {
+				//System.out.println("before thread2 join");
 				thread2.join();
-				System.out.println("-----------------------------------------running thread3!!");
+				System.out.println("--------------------------------------------------------------------------------------running thread3!!");
 			}
 		});
 		thread1.setName("thread1");
@@ -420,9 +473,9 @@ public class PriorityScheduler extends Scheduler {
 		thread3.setName("thread3");
 
 		boolean intStatue = Machine.interrupt().disable();
-		ThreadedKernel.scheduler.setPriority(thread1, 4);
-		ThreadedKernel.scheduler.setPriority(thread2, 1);
-		ThreadedKernel.scheduler.setPriority(thread3, 3);
+		ThreadedKernel.scheduler.setPriority(thread1, 3);
+		ThreadedKernel.scheduler.setPriority(thread2, 2);
+		ThreadedKernel.scheduler.setPriority(thread3, 5);
 		System.out.println("finish setting priority");
 		Machine.interrupt().setStatus(intStatue);
 

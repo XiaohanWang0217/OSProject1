@@ -54,10 +54,6 @@ public class KThread {
      * create an idle thread as well.
      */
     public KThread() {
-        boolean status = Machine.interrupt().disable();
-        joinQueue = ThreadedKernel.scheduler.newThreadQueue(true);
-        joinQueue.acquire(this);
-        Machine.interrupt().restore(status);
         if (currentThread != null) {
             // 再次调用构造函数创建新线程
             // 每个线程有自己的nachos.machine.TCB对象
@@ -67,6 +63,8 @@ public class KThread {
         } else {
 
             // my code begin 
+            joinQueue = ThreadedKernel.scheduler.newThreadQueue(true);
+            joinQueue.acquire(this);
             // my code end
 
 
@@ -169,6 +167,8 @@ public class KThread {
 
         Lib.debug(dbgThread, "Forking thread: " + toString() + " Runnable: " + target);
 
+        System.out.println("in fork function of "+this.getName());
+
         boolean intStatus = Machine.interrupt().disable();
 
         tcb.start(new Runnable() {
@@ -177,7 +177,6 @@ public class KThread {
             }
         });
 
-        //System.out.println("in fork function of "+this.getName());
         ready();
 
         Machine.interrupt().restore(intStatus);
@@ -222,13 +221,13 @@ public class KThread {
         currentThread.status = statusFinished;
 
         // my code begin
-        //System.out.println("in finish function of "+currentThread.getName());
 
-        KThread thread = currentThread.joinQueue.nextThread();
-        while ( null != thread)
+        //System.out.println(currentThread.getName()+" has finished");
+
+        KThread thread = joinQueue.nextThread();
+        if ( null != thread)
         {
             thread.ready();
-            thread = currentThread.joinQueue.nextThread();
         }
         // my code end
 
@@ -292,12 +291,12 @@ public class KThread {
      */
     public void ready() {
         Lib.debug(dbgThread, "Ready thread: " + toString());
-        //System.out.println("in ready function of "+this.getName());
 
         Lib.assertTrue(Machine.interrupt().disabled());
         Lib.assertTrue(status != statusReady);
 
         status = statusReady;
+        System.out.println("in ready function of "+getName());
         if (this != idleThread)
             readyQueue.waitForAccess(this);
 
@@ -311,15 +310,15 @@ public class KThread {
      */
     // my code begin
     private boolean joinFlag = false;
-    public ThreadQueue joinQueue = null;
+    private static ThreadQueue joinQueue = null;
     // my code end
     public void join() {
         Lib.debug(dbgThread, "Joining to thread: " + toString());
 
         Lib.assertTrue(this != currentThread);
-        //System.out.println("in join function of "+this.getName());
 
         // my-code-begin
+        //System.out.println("in join function of "+this.getName());
         if (statusFinished == this.status)
         {
             return;
@@ -327,12 +326,12 @@ public class KThread {
 
         boolean intStatus = Machine.interrupt().disable();
 
-        if (!joinFlag)
+        if (!currentThread.joinFlag)
         {
-            //System.out.println("---------------");
+            //System.out.println(this.getName()+" is joined in "+currentThread().getName());
             joinQueue.waitForAccess(currentThread);
             joinFlag = true;
-            currentThread.sleep();
+            sleep();
         }
 
         Machine.interrupt().restore(intStatus);
@@ -371,10 +370,10 @@ public class KThread {
      * <tt>run()</tt>.
      */
     private static void runNextThread() {
-        //System.out.println("runNextThread");
         KThread nextThread = readyQueue.nextThread();
         if (nextThread == null)
             nextThread = idleThread;
+        System.out.println("finding next thread --- "+nextThread.getName());
 
         nextThread.run();
     }
@@ -399,7 +398,7 @@ public class KThread {
      */
     private void run() {
         Lib.assertTrue(Machine.interrupt().disabled());
-        //System.out.println("in run function of "+this.getName());
+        System.out.println("in run function of "+getName());
 
         Machine.yield();
 
@@ -539,48 +538,6 @@ public class KThread {
 
         Lib.assertTrue((thread1.status == statusFinished), " thread1 should be finished.");
         Lib.assertTrue((thread2.status == statusFinished), " thread2 should be finished.");
-    }
-
-    public static void selfTest_lot() {
-		System.out.println("\n\n---------------------------\n\n");
-		System.out.println("happy to test LotteryScheduler");
-		KThread thread1 = new KThread(
-			new Runnable() {
-				public void run() {
-					System.out.println("-----------------------------------------running thread1!!");
-				}
-			}
-		);
-		KThread thread2 = new KThread(new Runnable() {
-			public void run() {
-				//thread1.join();
-				System.out.println("-----------------------------------------running thread2!!");
-			}
-		});
-		KThread thread3 = new KThread(new Runnable() {
-			public void run() {
-				thread2.join();
-				System.out.println("-----------------------------------------running thread3!!");
-			}
-		});
-		thread1.setName("thread1");
-		thread2.setName("thread2");
-		thread3.setName("thread3");
-
-		boolean intStatue = Machine.interrupt().disable();
-		ThreadedKernel.scheduler.setPriority(thread1, 4);
-		ThreadedKernel.scheduler.setPriority(thread2, 3);
-		ThreadedKernel.scheduler.setPriority(thread3, 5);
-		System.out.println("finish setting priority");
-		Machine.interrupt().setStatus(intStatue);
-
-		thread1.fork();
-		thread2.fork();
-		thread3.fork();
-
-		thread1.join();
-		//thread2.join();
-		thread3.join();
     }
     // my test code end
 

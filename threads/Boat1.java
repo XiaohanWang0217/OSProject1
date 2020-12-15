@@ -15,11 +15,8 @@ public class Boat
 	//System.out.println("\n ***Testing Boats with 2 children, 1 adult***");
   	//begin(1, 2, b);
 
-	  System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
-	  int w=5;
-	  String str="number = "+String.valueOf(w);
-	  System.out.println(str);
-  	  begin(3, 3, b);
+  	System.out.println("\n ***Testing Boats with 3 children, 3 adults***");
+  	begin(3, 3, b);
 	}
 	
 	private static boolean boat_position,is_pilot,is_adult_go,task_finished;
@@ -147,11 +144,11 @@ public class Boat
 	   indicates that an adult has rowed the boat across to Molokai
 	*/
 	lock.acquire();
-	//System.out.println("begin a new adult");
+	System.out.println("begin a new adult");
 	while (!is_adult_go || boat_position)
 		adult_Oahu_lock.sleep();
 	
-		/*if (KThread.currentThread().getName()=="0")
+		if (KThread.currentThread().getName()=="0")
 			System.out.println("begin 0-th adult loop");
 		else if (KThread.currentThread().getName()=="1")
 			System.out.println("begin 1-th adult loop");
@@ -170,21 +167,21 @@ public class Boat
 		else if (KThread.currentThread().getName()=="8")
 			System.out.println("begin 8-th adult loop");
 		else if (KThread.currentThread().getName()=="9")
-			System.out.println("begin 9-th adult loop");*/
+			System.out.println("begin 9-th adult loop");
 
 	bg.AdultRowToMolokai();
 	adult_Oahu--;
 	adult_Molokai++;
 	if (adult_Oahu > 0 && children_Molokai > 1) {
 		is_adult_go = true;
-		//System.out.println("change is_adult_go to true");
+		System.out.println("change is_adult_go to true");
 	} else {
-		//System.out.println("change is_adult_go to false");
+		System.out.println("change is_adult_go to false");
 		is_adult_go = false;
 	}
 	boat_position = true;
 	
-	//System.out.println("a adult ended");
+	System.out.println("a adult ended");
 	children_Molokai_lock.wake();
 	
 	lock.release();
@@ -195,11 +192,11 @@ public class Boat
 		bg.initializeChild(); //Required for autograder interface. Must be the first thing called.
 		//DO NOT PUT ANYTHING ABOVE THIS LINE. 
 		lock.acquire();
-		//System.out.println("begin a child");
+		System.out.println("begin a child");
 		boolean position = false;
 		boolean is_first_go = true;
 		while (children_Oahu > 0 || adult_Oahu > 0) {
-			/*if (KThread.currentThread().getName()=="0")
+			if (KThread.currentThread().getName()=="0")
 				System.out.println("begin 0-th child loop");
 			else if (KThread.currentThread().getName()=="1")
 				System.out.println("begin 1-th child loop");
@@ -218,19 +215,19 @@ public class Boat
 			else if (KThread.currentThread().getName()=="8")
 				System.out.println("begin 8-th child loop");
 			else if (KThread.currentThread().getName()=="9")
-				System.out.println("begin 9-th child loop");*/
+				System.out.println("begin 9-th child loop");
     
 			if (position == false) {
-				/*if (boat_position)
+				if (boat_position)
 					System.out.println("boat at Molokai");
 				else
-					System.out.println("boat at Oahu");*/
+					System.out.println("boat at Oahu");
 				while (boat_position || is_adult_go)
 					children_Oahu_lock.sleep();
 				if (!task_finished) {
 
 
-			/*if (KThread.currentThread().getName()=="0")
+			if (KThread.currentThread().getName()=="0")
 				System.out.println("mid 0-th child loop");
 			else if (KThread.currentThread().getName()=="1")
 				System.out.println("mid 1-th child loop");
@@ -249,22 +246,22 @@ public class Boat
 			else if (KThread.currentThread().getName()=="8")
 				System.out.println("mid 8-th child loop");
 			else if (KThread.currentThread().getName()=="9")
-				System.out.println("mid 9-th child loop");*/
+				System.out.println("mid 9-th child loop");
 
 					if (is_pilot) {
-						//System.out.println("row to Molokai");
+						System.out.println("row to Molokai");
 						bg.ChildRowToMolokai();
 						children_Oahu--;
 						children_Molokai++;
 						is_pilot = false;
 						position = true;
 						if (children_Oahu>0) {
-							//System.out.println("wait for partner");
+							System.out.println("wait for partner");
 							children_Oahu_lock.wake();
 							boat_wait.sleep();
-							//System.out.println("has found a partner");
+							System.out.println("has found a partner");
 						} else {
-							//System.out.println("single travel");
+							System.out.println("single travel");
 							is_pilot = true;
 							if (adult_Oahu == 0) {
 								task_finished_lock.wake();
@@ -273,7 +270,7 @@ public class Boat
 						//children_Molokai_lock.sleep();
 						//System.out.println("next task given");
 					} else {
-						//System.out.println("ride to Molokai");
+						System.out.println("ride to Molokai");
 						bg.ChildRideToMolokai();
 						position = true;
 						boat_position = true;
@@ -282,12 +279,12 @@ public class Boat
 						is_pilot = true;
 						boat_wait.wake();
 						if (adult_Oahu == 0 && children_Oahu == 0) {
-							//System.out.println("task finished !!");
+							System.out.println("task finished !!");
 							task_finished_lock.wake();
 							children_Molokai_lock.sleep();
 						} else {
 							if (adult_Oahu > 0) {
-								//System.out.println("change is_adult_go to true");
+								System.out.println("change is_adult_go to true");
 								is_adult_go = true;
 							}
 						
@@ -296,14 +293,14 @@ public class Boat
 					}
 				}
 			} else {
-				/*if (boat_position)
+				if (boat_position)
 					System.out.println("boat at Molokai");
 				else
-					System.out.println("boat at Oahu");*/
+					System.out.println("boat at Oahu");
 					while (!boat_position)
 						children_Molokai_lock.sleep();
 					if (children_Oahu > 0 || adult_Oahu > 0) {
-						//System.out.println("back to Oahu");
+						System.out.println("back to Oahu");
 						bg.ChildRowToOahu();
 						position = false;
 						boat_position = false;
@@ -311,18 +308,18 @@ public class Boat
 						children_Oahu++;
 
 						if (adult_Oahu == 0) {
-							//System.out.println("(children next");
+							System.out.println("(children next");
 							is_adult_go = false;
-							//System.out.println("change is_adult_go to false");
+							System.out.println("change is_adult_go to false");
 							children_Oahu_lock.wake();
 						} else {
 							if (is_adult_go) {
-								//System.out.println("(adult next");
+								System.out.println("(adult next");
 								adult_Oahu_lock.wake();
 								children_Oahu_lock.sleep();
 							}
 							else {
-								//System.out.println("(children next");
+								System.out.println("(children next");
 								children_Oahu_lock.wake();
 							}
 						}
